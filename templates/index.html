@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Billing Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h2 class="text-center">Truck Billing Management</h2>
+
+    <!-- Set EMI for a Truck -->
+    <h3 class="mt-4">Set EMI for a Truck</h3>
+    <form action="/set_emi" method="POST">
+        <input type="text" name="truck_number" placeholder="Truck Number" required>
+        <input type="number" name="emi_per_month" placeholder="EMI per Month" required>
+        <button type="submit" class="btn btn-primary">Set EMI</button>
+    </form>
+
+    <!-- Add Trip Form -->
+    <h3 class="mt-4">Add a New Trip</h3>
+    <form action="/add" method="POST">
+        <input type="text" name="truck_number" placeholder="Truck Number" required>
+        <input type="date" name="trip_start" required>
+        <input type="date" name="trip_end" required>
+        <input type="text" name="trip_start_location" placeholder="Trip Start Location" required>
+        <input type="text" name="trip_end_location" placeholder="Trip End Location" required>
+        <input type="number" name="fuel_consumed" placeholder="Fuel (Liters)" required>
+        <input type="number" name="fuel_cost" placeholder="Fuel Cost" required>
+        <input type="number" name="def_consumed" placeholder="DEF Consumption (Liters)" required>
+        <input type="number" name="def_cost" placeholder="DEF Cost" required>
+        <input type="number" name="toll" placeholder="Toll Charges" required>
+        <input type="number" name="other_expenses" placeholder="Other Expenses" required>
+        <input type="text" name="transporter" placeholder="Transporter" required>
+        <input type="text" name="broker" placeholder="Broker" required>
+        <input type="number" name="broker_commission" placeholder="Broker Commission (if any)">
+        <input type="number" name="total_fare" placeholder="Total Fare" required>
+        <input type="number" name="amount_received" placeholder="Amount Received" required>
+        <button type="submit" class="btn btn-success">Add Trip</button>
+    </form>
+
+    <!-- Trip Billing Details -->
+    <h3 class="mt-4">Trip Billing Details</h3>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Truck No.</th>
+                <th>Trip Start</th>
+                <th>Trip End</th>
+                <th>Start Location</th>
+                <th>End Location</th>
+                <th>Fuel (L)</th>
+                <th>Fuel Cost</th>
+                <th>DEF (L)</th>
+                <th>DEF Cost</th>
+                <th>Toll</th>
+                <th>Other Expenses</th>
+                <th>Transporter</th>
+                <th>Broker</th>
+                <th>Broker Commission</th>
+                <th>Total Fare</th>
+                <th>Amount Received</th>
+                <th>Amount Due</th>
+                <th>Settle Payment</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if trips %}
+                {% for trip in trips %}
+                <tr>
+                    <td>{{ trip[1] }}</td> <!-- Truck Number -->
+                    <td>{{ trip[2] }}</td> <!-- Trip Start -->
+                    <td>{{ trip[3] }}</td> <!-- Trip End -->
+                    <td>{{ trip[4] }}</td> <!-- Trip Start Location -->
+                    <td>{{ trip[5] }}</td> <!-- Trip End Location -->
+                    <td>{{ trip[6] }}</td> <!-- Fuel Consumed -->
+                    <td>₹{{ trip[7] }}</td> <!-- Fuel Cost -->
+                    <td>{{ trip[8] }}</td> <!-- DEF Consumed -->
+                    <td>₹{{ trip[9] }}</td> <!-- DEF Cost -->
+                    <td>₹{{ trip[10] }}</td> <!-- Toll -->
+                    <td>₹{{ trip[11] }}</td> <!-- Other Expenses -->
+                    <td>{{ trip[12] }}</td> <!-- Transporter -->
+                    <td>{{ trip[13] }}</td> <!-- Broker -->
+                    <td>₹{{ trip[14] }}</td> <!-- Broker Commission -->
+                    <td>₹{{ trip[15] }}</td> <!-- Total Fare -->
+                    <td>₹{{ trip[16] }}</td> <!-- Amount Received -->
+                    <td style="color: red; font-weight: bold;">₹{{ trip[15] - trip[16] }}</td> <!-- Amount Due -->
+                    <td>
+                        <form action="/settle_due/{{ trip[0] }}" method="POST">
+                            <input type="number" name="payment_amount" placeholder="Enter Amount" required>
+                            <button type="submit" class="btn btn-success btn-sm">Settle Due</button>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="/delete/{{ trip[0] }}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="19" class="text-center">No trips available</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Profit & Loss Section -->
+    <h3 class="mt-4">Profit & Loss Summary</h3>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Truck No.</th>
+                <th>Total Fare</th>
+                <th>Total Expenses</th>
+                <th>EMI per Month</th>
+                <th>Profit/Loss</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if profit_data %}
+                {% for profit in profit_data %}
+                <tr>
+                    <td>{{ profit[0] }}</td>
+                    <td>₹{{ profit[1] }}</td>
+                    <td>₹{{ profit[2] }}</td>
+                    <td>₹{{ profit[3] }}</td>
+                    <td style="color: {% if profit[4] < 0 %} red {% else %} green {% endif %}; font-weight: bold;">
+                        ₹{{ profit[4] }}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No data available</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Payment History -->
+    <h3 class="mt-4">Payment History</h3>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Truck No.</th>
+                <th>Trip Start</th>
+                <th>Trip End</th>
+                <th>Payment Amount</th>
+                <th>Payment Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if payments %}
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ payment[1] }}</td> <!-- Truck Number -->
+                    <td>{{ payment[2] }}</td> <!-- Trip Start Date -->
+                    <td>{{ payment[3] }}</td> <!-- Trip End Date -->
+                    <td>₹{{ payment[4] }}</td> <!-- Payment Amount -->
+                    <td>{{ payment[5] }}</td> <!-- Payment Date -->
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">No payments recorded</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+</html>
